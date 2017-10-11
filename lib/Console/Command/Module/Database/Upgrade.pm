@@ -37,6 +37,14 @@ sub Configure {
         ValueRegex  => qr/.*/smx,
     );
 
+    $Self->AddOption(
+        Name        => 'version',
+        Description => "Minimum version for database upgrade statements",
+        Required    => 0,
+        HasValue    => 1,
+        ValueRegex  => qr/\d+\.\d{1,3}\.\d{1,3}/smx,
+    );
+
     return;
 }
 
@@ -87,9 +95,10 @@ sub Run {
 
         for my $Type (@Types) {
             $Success = $Self->DatabaseActionHandler(
-                Module => $Module,
-                Action => 'Upgrade',
-                Type   => $Type,
+                Module  => $Module,
+                Action  => 'Upgrade',
+                Type    => $Type,
+                Version => $Self->GetOption('version'),
             );
         }
     }

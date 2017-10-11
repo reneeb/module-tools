@@ -185,17 +185,31 @@ sub DatabaseActionHandler {
 
         my $CheckVersion = sprintf "%d%03d%03d", split /\./, $Param{Version};
 
-        for my $Type ( qw/pre post/ ) {
+       for my $Type ( qw/pre post/ ) {
+            my $Inside;
 
             PART:
             for my $Part ( @{ $Structure{$StructureKey}->{$Type} || [] } ) {
-                next PART if !$Part->{Version};
+                next PART if !$Part->{Version} && !$Inside;
 
-                my $PartVersion = sprintf "%d%03d%03d", split /\./, $Part->{Version};
+                if ( $Part->{TagType} eq 'Start' && !$Inside && $Part->{Version} ) {
+                    $Inside = $Part->{Tag};
+                }
 
-                next PART if $CheckVersion > $PartVersion;
+                my $PartVersion = sprintf "%d%03d%03d", split /\./, $Part->{Version} || ("0.0.0");
+
+                if ( ( 0 + $PartVersion ) && $CheckVersion > $PartVersion ) {
+                    $Inside = undef;
+                    next PART;
+                }
+
+                next PART if !$Inside;
 
                 push @{ $RelevantStructure{$Type} }, $Part;
+
+                if ( $Part->{TagType} eq 'End' && $Inside eq $Part->{Tag} ) {
+                    $Inside = undef;
+                }
             }
         }
 
